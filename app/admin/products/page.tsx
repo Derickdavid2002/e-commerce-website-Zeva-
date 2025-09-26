@@ -71,6 +71,37 @@ export default function AdminProductsPage() {
     }
   }
 
+  const handleViewProduct = (productId: string) => {
+    const product = products.find((p) => p.id === productId)
+    if (product) {
+      // TODO: Connect Firebase here - Navigate to product view page or show modal
+      console.log("🔥 TODO: Connect Firebase here - View product details")
+      console.log("Viewing product:", product)
+
+      // For now, show product details in alert (in real app, navigate to view page)
+      alert(
+        `Product Details:\n\nName: ${product.name}\nPrice: $${product.price}\nCategory: ${product.category}\nDescription: ${product.description}\nStock: ${product.inStock ? "In Stock" : "Out of Stock"}`,
+      )
+    }
+  }
+
+  const handleEditProduct = (productId: string) => {
+    const product = products.find((p) => p.id === productId)
+    if (product) {
+      // TODO: Connect Firebase here - Navigate to product edit page or show edit modal
+      console.log("🔥 TODO: Connect Firebase here - Edit product in Firestore")
+      console.log("Editing product:", product)
+
+      // For now, show edit prompt (in real app, navigate to edit page or show modal)
+      const newName = prompt("Edit product name:", product.name)
+      if (newName && newName !== product.name) {
+        // Update product in state (in real app, update in Firestore)
+        setProducts(products.map((p) => (p.id === productId ? { ...p, name: newName } : p)))
+        alert("Product updated successfully!")
+      }
+    }
+  }
+
   const filteredProducts = products.filter((product) => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
   return (
@@ -175,10 +206,20 @@ export default function AdminProductsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewProduct(product.id)}
+                              title="View product details"
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditProduct(product.id)}
+                              title="Edit product"
+                            >
                               <Edit className="h-4 w-4" />
                               {/* TODO: Connect Firebase here - Edit product in Firestore */}
                             </Button>
@@ -187,6 +228,7 @@ export default function AdminProductsPage() {
                               size="icon"
                               className="text-destructive hover:text-destructive"
                               onClick={() => handleDeleteProduct(product.id)}
+                              title="Delete product"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
