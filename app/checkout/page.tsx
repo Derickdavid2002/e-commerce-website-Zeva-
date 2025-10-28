@@ -17,6 +17,9 @@ import { useCart } from "@/lib/cart-context"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { db, storage } from "@/lib/firebase"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { collection, addDoc } from "firebase/firestore"
 
 interface CustomerInfo {
   fullName: string
@@ -79,49 +82,36 @@ export default function CheckoutPage() {
     setIsSubmitting(true)
 
     try {
-      // TODO: Connect Firebase here - Upload payment proof to Firebase Storage
-      /*
-      import { storage, db } from '@/lib/firebase'
-      import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-      import { collection, addDoc } from 'firebase/firestore'
-      
-      // Upload payment proof to Firebase Storage
-      const storageRef = ref(storage, `payment-proofs/${Date.now()}-${paymentProof.name}`)
-      const uploadResult = await uploadBytes(storageRef, paymentProof)
-      const paymentProofUrl = await getDownloadURL(uploadResult.ref)
-      
+      let paymentProofUrl = ""
+
+      if (paymentProof) {
+        const storageRef = ref(storage, `payment-proofs/${Date.now()}-${paymentProof.name}`)
+        const uploadResult = await uploadBytes(storageRef, paymentProof)
+        paymentProofUrl = await getDownloadURL(uploadResult.ref)
+      }
+
       // Create order document in Firestore
       const orderData = {
         items: state.items,
         customerInfo,
         paymentProofUrl,
         total,
-        status: 'pending',
-        createdAt: new Date(),
-        deliveryType: '2-day'
-      }
-      
-      const docRef = await addDoc(collection(db, 'orders'), orderData)
-      console.log('Order created with ID:', docRef.id)
-      */
-
-      // Placeholder for Firebase integration
-      console.log("🔥 TODO: Connect Firebase here - Upload payment proof and create order")
-      console.log("Order data:", {
-        items: state.items,
-        customerInfo,
-        paymentProof: paymentProof?.name,
-        total,
+        subtotal,
+        shipping,
+        tax,
         status: "pending",
         createdAt: new Date(),
-      })
+        deliveryType: "2-day",
+      }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const docRef = await addDoc(collection(db, "orders"), orderData)
+      console.log("Order created with ID:", docRef.id)
 
-      // Clear cart and redirect to confirmation
+      // Clear cart
       dispatch({ type: "CLEAR_CART" })
-      router.push("/checkout/confirmation")
+
+      // Redirect to confirmation page
+      router.push(`/checkout/confirmation?orderId=${docRef.id}`)
     } catch (error) {
       console.error("Error submitting order:", error)
       alert("Failed to submit order. Please try again.")

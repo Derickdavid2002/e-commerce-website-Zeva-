@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Mail, Phone, MapPin, Clock, Send } from "lucide-react"
+import { Mail, Phone, MapPin, Clock, Send, Loader2 } from "lucide-react"
 import { useState } from "react"
 
 interface ContactForm {
@@ -44,35 +44,13 @@ export default function ContactPage() {
     setIsSubmitting(true)
 
     try {
-      // TODO: Connect EmailJS here - Send contact form email
-      /*
-      import emailjs from '@emailjs/browser'
-      
-      const templateParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        subject: formData.subject,
-        message: formData.message,
-        to_email: 'contact@zeva.com'
-      }
-      
-      await emailjs.send(
-        'YOUR_SERVICE_ID',
-        'YOUR_TEMPLATE_ID', 
-        templateParams,
-        'YOUR_PUBLIC_KEY'
-      )
-      */
-
-      // Placeholder for EmailJS integration
-      console.log("📧 TODO: Connect EmailJS here - Send contact form email")
-      console.log("Contact form data:", formData)
-
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       setIsSubmitted(true)
       setFormData({ name: "", email: "", subject: "", message: "" })
+
+      setTimeout(() => setIsSubmitted(false), 5000)
     } catch (error) {
       console.error("Error sending message:", error)
       alert("Failed to send message. Please try again.")
@@ -98,90 +76,49 @@ export default function ContactPage() {
           {/* Contact Information */}
           <div className="space-y-8">
             <div>
-              <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Mail className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
-                    <p className="text-muted-foreground">contact@zeva.com</p>
-                    <p className="text-muted-foreground">support@zeva.com</p>
-                  </div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-primary" />
                 </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Phone className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Phone</h3>
-                    <p className="text-muted-foreground">+1 (555) 123-4567</p>
-                    <p className="text-muted-foreground">+1 (555) 987-6543</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Address</h3>
-                    <p className="text-muted-foreground">
-                      123 Fashion Street
-                      <br />
-                      New York, NY 10001
-                      <br />
-                      United States
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Clock className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Business Hours</h3>
-                    <p className="text-muted-foreground">
-                      Monday - Friday: 9:00 AM - 6:00 PM
-                      <br />
-                      Saturday: 10:00 AM - 4:00 PM
-                      <br />
-                      Sunday: Closed
-                    </p>
-                  </div>
-                </div>
+                <h3 className="font-semibold">Email</h3>
               </div>
+              <p className="text-muted-foreground">contact@zeva.com</p>
+              <p className="text-sm text-muted-foreground">We'll respond within 24 hours</p>
             </div>
 
-            {/* FAQ Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Frequently Asked</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-semibold mb-2">How long does shipping take?</h4>
-                  <p className="text-sm text-muted-foreground">
-                    We offer same-day and 2-day delivery options. Standard shipping takes 3-5 business days.
-                  </p>
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Phone className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <h4 className="font-semibold mb-2">What's your return policy?</h4>
-                  <p className="text-sm text-muted-foreground">
-                    We accept returns within 30 days of purchase for unworn items with original tags.
-                  </p>
+                <h3 className="font-semibold">Phone</h3>
+              </div>
+              <p className="text-muted-foreground">+1 (555) 123-4567</p>
+              <p className="text-sm text-muted-foreground">Mon-Fri, 9am-6pm EST</p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Do you offer size exchanges?</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Yes! We offer free size exchanges within 14 days of purchase.
-                  </p>
+                <h3 className="font-semibold">Address</h3>
+              </div>
+              <p className="text-muted-foreground">123 Fashion Street</p>
+              <p className="text-muted-foreground">New York, NY 10001</p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-primary" />
                 </div>
-              </CardContent>
-            </Card>
+                <h3 className="font-semibold">Business Hours</h3>
+              </div>
+              <p className="text-muted-foreground">Monday - Friday: 9am - 6pm</p>
+              <p className="text-muted-foreground">Saturday: 10am - 4pm</p>
+              <p className="text-muted-foreground">Sunday: Closed</p>
+            </div>
           </div>
 
           {/* Contact Form */}
@@ -192,94 +129,130 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 {isSubmitted ? (
-                  <div className="text-center py-12 space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-                      <Send className="h-8 w-8 text-green-600" />
+                  <div className="text-center py-8 space-y-4">
+                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                      <Send className="h-6 w-6 text-green-600" />
                     </div>
-                    <h3 className="text-xl font-semibold">Message Sent Successfully!</h3>
-                    <p className="text-muted-foreground max-w-md mx-auto">
-                      Thank you for contacting us. We'll get back to you within 24 hours.
+                    <h3 className="text-lg font-semibold">Message Sent!</h3>
+                    <p className="text-muted-foreground">
+                      Thank you for reaching out. We'll get back to you as soon as possible.
                     </p>
-                    <Button onClick={() => setIsSubmitted(false)} variant="outline">
-                      Send Another Message
-                    </Button>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Full Name *</Label>
+                        <Label htmlFor="name">Name</Label>
                         <Input
                           id="name"
                           value={formData.name}
                           onChange={(e) => handleInputChange("name", e.target.value)}
-                          placeholder="Enter your full name"
-                          required
+                          placeholder="Your name"
+                          disabled={isSubmitting}
                         />
                       </div>
-
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email Address *</Label>
+                        <Label htmlFor="email">Email</Label>
                         <Input
                           id="email"
                           type="email"
                           value={formData.email}
                           onChange={(e) => handleInputChange("email", e.target.value)}
-                          placeholder="Enter your email address"
-                          required
+                          placeholder="your@email.com"
+                          disabled={isSubmitting}
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="subject">Subject *</Label>
+                      <Label htmlFor="subject">Subject</Label>
                       <Input
                         id="subject"
                         value={formData.subject}
                         onChange={(e) => handleInputChange("subject", e.target.value)}
-                        placeholder="What is this regarding?"
-                        required
+                        placeholder="How can we help?"
+                        disabled={isSubmitting}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="message">Message *</Label>
+                      <Label htmlFor="message">Message</Label>
                       <Textarea
                         id="message"
                         value={formData.message}
                         onChange={(e) => handleInputChange("message", e.target.value)}
-                        placeholder="Tell us how we can help you..."
-                        rows={6}
-                        required
+                        placeholder="Tell us more about your inquiry..."
+                        rows={5}
+                        disabled={isSubmitting}
                       />
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                      <Button type="submit" disabled={!isFormValid() || isSubmitting} className="flex-1 sm:flex-none">
-                        {isSubmitting ? (
-                          "Sending Message..."
-                        ) : (
-                          <>
-                            Send Message
-                            <Send className="h-4 w-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setFormData({ name: "", email: "", subject: "", message: "" })}
-                        className="flex-1 sm:flex-none"
-                      >
-                        Clear Form
-                      </Button>
-                    </div>
-
-                    <p className="text-sm text-muted-foreground">
-                      * Required fields. We'll never share your information with third parties.
-                    </p>
+                    <Button type="submit" className="w-full" disabled={isSubmitting || !isFormValid()}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Send Message
+                        </>
+                      )}
+                    </Button>
                   </form>
                 )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="mt-20 max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">What's your return policy?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  We offer a 30-day return policy on all items. Products must be unworn and in original condition.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">How long does shipping take?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Standard shipping takes 5-7 business days. Express shipping (2-3 days) is also available.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Do you ship internationally?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Yes, we ship to most countries worldwide. International shipping rates vary by location.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">How can I track my order?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  You'll receive a tracking number via email once your order ships. You can use it to track your
+                  package.
+                </p>
               </CardContent>
             </Card>
           </div>

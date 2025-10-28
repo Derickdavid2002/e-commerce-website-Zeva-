@@ -6,144 +6,154 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Search, Edit, Trash2, Eye } from "lucide-react"
-import { sampleProducts } from "@/lib/sample-data"
+import { Plus, Search, Edit, Trash2, Eye, Loader2, AlertCircle } from "lucide-react"
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { db } from "@/lib/firebase"
+import { collection, deleteDoc, doc, query, orderBy, onSnapshot } from "firebase/firestore"
+import { sampleProducts } from "@/lib/sample-data"
 
 export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [products, setProducts] = useState(sampleProducts)
-  const [isLoading, setIsLoading] = useState(false)
+  const [products, setProducts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isUsingFallback, setIsUsingFallback] = useState(false)
 
-  // TODO: Connect Firebase here - Fetch products from Firestore
   useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true)
-      try {
-        /*
-        import { db } from '@/lib/firebase'
-        import { collection, getDocs, query, orderBy } from 'firebase/firestore'
-        
-        const productsQuery = query(collection(db, 'products'), orderBy('createdAt', 'desc'))
-        const querySnapshot = await getDocs(productsQuery)
-        const productsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        setProducts(productsData)
-        */
+    let unsubscribe: (() => void) | undefined
 
-        console.log("🔥 TODO: Connect Firebase here - Fetch products from Firestore")
-        // Using sample data for now
+    const setupProductsListener = () => {
+      try {
+        const productsQuery = query(collection(db, "products"), orderBy("createdAt", "desc"))
+
+        unsubscribe = onSnapshot(
+          productsQuery,
+          (querySnapshot) => {
+            const productsData = querySnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+            setProducts(productsData)
+            setIsLoading(false)
+            setIsUsingFallback(false)
+            setError(null)
+          },
+          (error: any) => {
+            if (error.code === "permission-denied" || error.code === "failed-precondition") {
+              setProducts(sampleProducts)
+              setIsUsingFallback(true)
+              setError("Using sample data. Configure Firestore security rules to enable live data.")
+            } else {
+              setProducts(sampleProducts)
+              setIsUsingFallback(true)
+              setError(`Database error: ${error.message}. Using sample data.`)
+            }
+            setIsLoading(false)
+          },
+        )
+      } catch (error: any) {
         setProducts(sampleProducts)
-      } catch (error) {
-        console.error("Error fetching products:", error)
-      } finally {
+        setIsUsingFallback(true)
+        setError("Failed to connect to database. Using sample data.")
         setIsLoading(false)
       }
     }
 
-    fetchProducts()
+    setupProductsListener()
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe()
+      }
+    }
   }, [])
 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return
 
+    setDeletingId(productId)
     try {
-      // TODO: Connect Firebase here - Delete product from Firestore
-      /*
-      import { db } from '@/lib/firebase'
-      import { doc, deleteDoc } from 'firebase/firestore'
-      
-      await deleteDoc(doc(db, 'products', productId))
-      setProducts(products.filter(p => p.id !== productId))
-      */
-
-      console.log("🔥 TODO: Connect Firebase here - Delete product from Firestore")
-      console.log("Deleting product:", productId)
-
-      // Simulate deletion for demo
-      setProducts(products.filter((p) => p.id !== productId))
-      alert("Product deleted successfully!")
-    } catch (error) {
-      console.error("Error deleting product:", error)
-      alert("Failed to delete product. Please try again.")
+      if (isUsingFallback) {
+        setProducts(products.filter((p) => p.id !== productId))
+        alert("Product removed from sample data. Configure Firestore to persist changes.")
+      } else {
+        await deleteDoc(doc(db, "products", productId))
+        alert("Product deleted successfully!")
+      }
+    } catch (error: any) {
+      console.error("[v0] Error deleting product:", error)
+      if (error.code === "permission-denied") {
+        alert(
+          "Permission denied. Configure Firestore security rules to allow product deletion. For now, you can delete from sample data.",
+        )
+        setProducts(products.filter((p) => p.id !== productId))
+      } else {
+        alert("Failed to delete product. Please try again.")
+      }
+    } finally {
+      setDeletingId(null)
     }
   }
 
   const handleViewProduct = (productId: string) => {
-    const product = products.find((p) => p.id === productId)
-    if (product) {
-      // TODO: Connect Firebase here - Navigate to product view page or show modal
-      console.log("🔥 TODO: Connect Firebase here - View product details")
-      console.log("Viewing product:", product)
-
-      // For now, show product details in alert (in real app, navigate to view page)
-      alert(
-        `Product Details:\n\nName: ${product.name}\nPrice: $${product.price}\nCategory: ${product.category}\nDescription: ${product.description}\nStock: ${product.inStock ? "In Stock" : "Out of Stock"}`,
-      )
-    }
+    window.location.href = `/admin/products/${productId}/view`
   }
 
   const handleEditProduct = (productId: string) => {
-    const product = products.find((p) => p.id === productId)
-    if (product) {
-      // TODO: Connect Firebase here - Navigate to product edit page or show edit modal
-      console.log("🔥 TODO: Connect Firebase here - Edit product in Firestore")
-      console.log("Editing product:", product)
-
-      // For now, show edit prompt (in real app, navigate to edit page or show modal)
-      const newName = prompt("Edit product name:", product.name)
-      if (newName && newName !== product.name) {
-        // Update product in state (in real app, update in Firestore)
-        setProducts(products.map((p) => (p.id === productId ? { ...p, name: newName } : p)))
-        alert("Product updated successfully!")
-      }
-    }
+    window.location.href = `/admin/products/${productId}/edit`
   }
 
-  const filteredProducts = products.filter((product) => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.id?.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold">Products</h1>
             <p className="text-muted-foreground">Manage your product catalog</p>
           </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-            {/* TODO: Connect Firebase here - Add new product to Firestore */}
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Product
+            </Link>
           </Button>
         </div>
 
-        {/* Search and Filters */}
+        {error && (
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardContent className="pt-6 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-yellow-800">{error}</p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  To enable live data, set up Firestore security rules that allow authenticated users to read/write
+                  products.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Search */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="bg-transparent">
-                  Filter
-                </Button>
-                <Button variant="outline" className="bg-transparent">
-                  Export
-                  {/* TODO: Connect Firebase here - Export products data */}
-                </Button>
-              </div>
+          <CardContent className="pt-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products by name or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </CardContent>
         </Card>
@@ -151,86 +161,70 @@ export default function AdminProductsPage() {
         {/* Products Table */}
         <Card>
           <CardHeader>
-            <CardTitle>All Products ({filteredProducts.length})</CardTitle>
+            <CardTitle>{isLoading ? "Loading Products..." : `${filteredProducts.length} Products`}</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Loading products...</p>
+            {isLoading && !products.length ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No products found</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product</TableHead>
+                      <TableHead>Name</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Stock</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredProducts.map((product) => (
                       <TableRow key={product.id}>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>{product.category}</TableCell>
+                        <TableCell>${product.price}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
-                              <img
-                                src={product.images[0] || "/placeholder.svg"}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                              />
-                              {/* TODO: Connect Firebase here - Load images from Firebase Storage */}
-                            </div>
-                            <div>
-                              <p className="font-medium">{product.name}</p>
-                              <p className="text-sm text-muted-foreground line-clamp-1">{product.description}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{product.category}</Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">${product.price}</TableCell>
-                        <TableCell>
-                          <Badge variant={product.inStock ? "default" : "destructive"}>
+                          <Badge variant={product.inStock ? "default" : "secondary"}>
                             {product.inStock ? "In Stock" : "Out of Stock"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant={product.featured ? "secondary" : "outline"}>
-                            {product.featured ? "Featured" : "Regular"}
-                          </Badge>
-                        </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex justify-end gap-2">
                             <Button
                               variant="ghost"
-                              size="icon"
+                              size="sm"
                               onClick={() => handleViewProduct(product.id)}
-                              title="View product details"
+                              title="View product"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
-                              size="icon"
+                              size="sm"
                               onClick={() => handleEditProduct(product.id)}
                               title="Edit product"
                             >
                               <Edit className="h-4 w-4" />
-                              {/* TODO: Connect Firebase here - Edit product in Firestore */}
                             </Button>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
+                              size="sm"
                               onClick={() => handleDeleteProduct(product.id)}
+                              disabled={deletingId === product.id}
                               title="Delete product"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {deletingId === product.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                         </TableCell>
@@ -242,10 +236,6 @@ export default function AdminProductsPage() {
             )}
           </CardContent>
         </Card>
-
-        <div className="text-center text-sm text-orange-600 p-4 bg-orange-50 rounded-lg">
-          🔥 TODO: Connect Firebase here - Replace sample data with real Firestore products collection
-        </div>
       </div>
     </AdminLayout>
   )

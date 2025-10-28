@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Store, Bell, Shield, Database, Save, AlertCircle, CheckCircle } from "lucide-react"
+import { Store, Bell, Shield, Database, Save, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import { useState } from "react"
 
 export default function AdminSettingsPage() {
@@ -74,6 +74,7 @@ export default function AdminSettingsPage() {
       }
       
       await setDoc(doc(db, 'settings', 'admin'), settingsData)
+      // Settings will update in real-time across the app
       */
 
       console.log("🔥 TODO: Connect Firebase here - Save admin settings to Firestore")
@@ -110,7 +111,10 @@ export default function AdminSettingsPage() {
           </div>
           <Button onClick={handleSaveSettings} disabled={isLoading}>
             {isLoading ? (
-              <>Saving...</>
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
@@ -367,7 +371,7 @@ export default function AdminSettingsPage() {
             <div className="mt-4 p-4 bg-orange-50 rounded-lg">
               <p className="text-sm text-orange-600">
                 🔥 TODO: Connect Firebase here - All integrations are configured but need to be connected to live
-                Firebase services
+                Firebase services for real-time sync
               </p>
             </div>
           </CardContent>

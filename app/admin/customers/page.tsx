@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Mail, Phone, Calendar, Eye, Edit, Trash2 } from "lucide-react"
+import { Search, Mail, Phone, Calendar, Eye, Edit, Trash2, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 
 // Sample customer data
@@ -65,27 +65,30 @@ export default function AdminCustomersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [customers, setCustomers] = useState(sampleCustomers)
   const [isLoading, setIsLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  // TODO: Connect Firebase here - Fetch customers from Firestore
+  // TODO: Connect Firebase here - Fetch customers from Firestore with real-time listener
   useEffect(() => {
     const fetchCustomers = async () => {
       setIsLoading(true)
       try {
         /*
         import { db } from '@/lib/firebase'
-        import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+        import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
         
         const customersQuery = query(collection(db, 'customers'), orderBy('joinDate', 'desc'))
-        const querySnapshot = await getDocs(customersQuery)
-        const customersData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        setCustomers(customersData)
+        const unsubscribe = onSnapshot(customersQuery, (querySnapshot) => {
+          const customersData = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          setCustomers(customersData)
+        })
+        
+        return () => unsubscribe()
         */
 
-        console.log("🔥 TODO: Connect Firebase here - Fetch customers from Firestore")
-        // Using sample data for now
+        console.log("🔥 TODO: Connect Firebase here - Fetch customers from Firestore with real-time listener")
         setCustomers(sampleCustomers)
       } catch (error) {
         console.error("Error fetching customers:", error)
@@ -119,16 +122,28 @@ export default function AdminCustomersPage() {
     }
   }
 
-  const handleDeleteCustomer = (customerId: string) => {
+  const handleDeleteCustomer = async (customerId: string) => {
     if (!confirm("Are you sure you want to delete this customer?")) return
 
+    setDeletingId(customerId)
     try {
+      // TODO: Connect Firebase here - Delete customer from Firestore
+      /*
+      import { db } from '@/lib/firebase'
+      import { doc, deleteDoc } from 'firebase/firestore'
+      
+      await deleteDoc(doc(db, 'customers', customerId))
+      // Customer will be removed from state via real-time listener
+      */
+
       console.log("🔥 TODO: Connect Firebase here - Delete customer from Firestore")
       setCustomers(customers.filter((c) => c.id !== customerId))
       alert("Customer deleted successfully!")
     } catch (error) {
       console.error("Error deleting customer:", error)
       alert("Failed to delete customer. Please try again.")
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -300,6 +315,7 @@ export default function AdminCustomersPage() {
                               size="icon"
                               onClick={() => handleViewCustomer(customer.id)}
                               title="View customer details"
+                              disabled={deletingId !== null}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -308,6 +324,7 @@ export default function AdminCustomersPage() {
                               size="icon"
                               onClick={() => handleEditCustomer(customer.id)}
                               title="Edit customer"
+                              disabled={deletingId !== null}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -317,8 +334,13 @@ export default function AdminCustomersPage() {
                               className="text-destructive hover:text-destructive"
                               onClick={() => handleDeleteCustomer(customer.id)}
                               title="Delete customer"
+                              disabled={deletingId !== null}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {deletingId === customer.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                         </TableCell>
@@ -332,7 +354,7 @@ export default function AdminCustomersPage() {
         </Card>
 
         <div className="text-center text-sm text-orange-600 p-4 bg-orange-50 rounded-lg">
-          🔥 TODO: Connect Firebase here - Replace sample data with real Firestore customers collection
+          🔥 TODO: Connect Firebase here - Real-time customer data with automatic sync to web
         </div>
       </div>
     </AdminLayout>

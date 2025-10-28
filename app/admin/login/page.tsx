@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Lock, Mail } from "lucide-react"
+import { Lock, Mail, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("")
@@ -25,33 +27,18 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      // TODO: Connect Firebase here - Implement Firebase authentication
-      /*
-      import { auth } from '@/lib/firebase'
-      import { signInWithEmailAndPassword } from 'firebase/auth'
-      
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
-      
-      // Check if user is admin (you can store admin role in Firestore)
+
+      // Store user session
+      localStorage.setItem("adminAuth", user.uid)
+      localStorage.setItem("adminEmail", user.email || "")
+
       // Redirect to admin dashboard
-      router.push('/admin/dashboard')
-      */
-
-      console.log("🔥 TODO: Connect Firebase here - Implement admin authentication")
-      console.log("Admin login attempt:", { email, password })
-
-      // Simulate authentication for demo
-      if (email === "admin@zeva.com" && password === "admin123") {
-        // Store admin session (in real app, this would be handled by Firebase Auth)
-        localStorage.setItem("adminAuth", "true")
-        router.push("/admin/dashboard")
-      } else {
-        setError("Invalid email or password")
-      }
+      router.push("/admin/dashboard")
     } catch (error: any) {
       console.error("Login error:", error)
-      setError(error.message || "Login failed")
+      setError(error.message || "Login failed. Please check your credentials.")
     } finally {
       setIsLoading(false)
     }
@@ -95,6 +82,7 @@ export default function AdminLoginPage() {
                     placeholder="admin@zeva.com"
                     className="pl-10"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -111,24 +99,29 @@ export default function AdminLoginPage() {
                     placeholder="Enter your password"
                     className="pl-10"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
 
             <div className="mt-6 p-4 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground text-center">
-                Demo credentials:
+                Firebase Authentication is now connected.
                 <br />
-                Email: admin@zeva.com
-                <br />
-                Password: admin123
+                Use your Firebase credentials to sign in.
               </p>
-              <p className="text-xs text-orange-600 text-center mt-2">🔥 TODO: Replace with Firebase Authentication</p>
             </div>
           </CardContent>
         </Card>

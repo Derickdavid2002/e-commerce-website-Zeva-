@@ -3,11 +3,12 @@
 import type React from "react"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Menu, X, Bell } from "lucide-react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
+import { auth } from "@/lib/firebase"
+import { signOut, onAuthStateChanged } from "firebase/auth"
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -25,46 +26,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [adminEmail, setAdminEmail] = useState("")
 
-  // Check authentication
   useEffect(() => {
-    // TODO: Connect Firebase here - Replace localStorage with Firebase Auth
-    /*
-    import { auth } from '@/lib/firebase'
-    import { onAuthStateChanged } from 'firebase/auth'
-    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
-        router.push('/admin/login')
+        router.push("/admin/login")
       } else {
-        // Check if user has admin role in Firestore
-        // You can store admin roles in a separate 'admins' collection
+        setAdminEmail(user.email || "")
       }
     })
-    
-    return () => unsubscribe()
-    */
 
-    console.log("🔥 TODO: Connect Firebase here - Replace localStorage auth with Firebase Auth")
-    const isAuthenticated = localStorage.getItem("adminAuth")
-    if (!isAuthenticated) {
-      router.push("/admin/login")
-    }
+    return () => unsubscribe()
   }, [router])
 
   const handleLogout = async () => {
     try {
-      // TODO: Connect Firebase here - Sign out from Firebase Auth
-      /*
-      import { auth } from '@/lib/firebase'
-      import { signOut } from 'firebase/auth'
-      
       await signOut(auth)
-      router.push('/admin/login')
-      */
-
-      console.log("🔥 TODO: Connect Firebase here - Sign out from Firebase Auth")
-      localStorage.removeItem("adminAuth")
       router.push("/admin/login")
     } catch (error) {
       console.error("Logout error:", error)
@@ -82,94 +60,79 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <aside
+        className={`fixed left-0 top-0 z-50 h-screen w-64 bg-sidebar border-r border-sidebar-border transform transition-transform duration-300 lg:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between p-6 border-b">
+          <div className="p-6 border-b border-sidebar-border">
             <Link href="/admin/dashboard" className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">Z</span>
+              <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
+                <span className="text-sidebar-primary-foreground font-bold">Z</span>
               </div>
-              <span className="text-xl font-bold">Zeva Admin</span>
+              <span className="text-lg font-bold text-sidebar-foreground">Zeva Admin</span>
             </Link>
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
-              <X className="h-5 w-5" />
-            </Button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 overflow-y-auto p-4 space-y-2">
             {navigation.map((item) => {
               const isActive = pathname === item.href
+              const Icon = item.icon
               return (
                 <Link
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  onClick={() => setIsSidebarOpen(false)}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   }`}
                 >
-                  <item.icon className="h-4 w-4" />
-                  {item.name}
+                  <Icon className="h-5 w-5" />
+                  <span>{item.name}</span>
                 </Link>
               )
             })}
           </nav>
 
-          {/* User section */}
-          <div className="p-4 border-t">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground text-sm font-medium">A</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Admin User</p>
-                <p className="text-xs text-muted-foreground">admin@zeva.com</p>
-                {/* TODO: Connect Firebase here - Display actual admin user info from Firebase Auth */}
-              </div>
+          {/* User Info and Logout */}
+          <div className="border-t border-sidebar-border p-4 space-y-4">
+            <div className="px-4 py-3 bg-sidebar-accent rounded-lg">
+              <p className="text-xs text-sidebar-accent-foreground opacity-75">Logged in as</p>
+              <p className="text-sm font-medium text-sidebar-accent-foreground truncate">{adminEmail}</p>
             </div>
-            <Button variant="outline" size="sm" className="w-full bg-transparent" onClick={handleLogout}>
+            <Button variant="outline" className="w-full justify-start bg-transparent" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-              <Menu className="h-5 w-5" />
+      {/* Main Content */}
+      <div className="lg:ml-64">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-40 bg-background border-b border-border">
+          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden">
+              {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
 
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-xs">
-                  3
-                </Badge>
-                {/* TODO: Connect Firebase here - Real-time notifications from Firestore */}
-              </Button>
+            <div className="flex-1" />
 
-              <Link href="/" target="_blank">
-                <Button variant="outline" size="sm" className="bg-transparent">
-                  View Store
-                </Button>
-              </Link>
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="icon">
+                <Bell className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </header>
 
-        {/* Page content */}
+        {/* Page Content */}
         <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>

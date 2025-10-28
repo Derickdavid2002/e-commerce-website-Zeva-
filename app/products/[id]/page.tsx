@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { ShoppingBag, Heart, Share2, Truck, Shield, RotateCcw, Star } from "lucide-react"
-import { sampleProducts } from "@/lib/sample-data"
-import { useState } from "react"
+import { ShoppingBag, Heart, Share2, Truck, Shield, RotateCcw, Star, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
 import { useCart } from "@/lib/cart-context"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { db } from "@/lib/firebase"
+import { doc, onSnapshot } from "firebase/firestore"
+import { sampleProducts } from "@/lib/sample-data"
 
 interface ProductPageProps {
   params: {
@@ -21,13 +23,38 @@ interface ProductPageProps {
 }
 
 export default function ProductPage({ params }: ProductPageProps) {
-  const product = sampleProducts.find((p) => p.id === params.id)
+  const [product, setProduct] = useState<any>(null)
   const [selectedSize, setSelectedSize] = useState("")
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isLiked, setIsLiked] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const { dispatch } = useCart()
   const router = useRouter()
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, "products", params.id), (doc) => {
+      if (doc.exists()) {
+        setProduct({ id: doc.id, ...doc.data() })
+      }
+      setIsLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [params.id])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading product...</span>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
 
   if (!product) {
     return (
@@ -59,8 +86,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       },
     })
 
-    // Show success message or redirect to cart
-    router.push("/cart")
+    alert("Product added to cart!")
   }
 
   const relatedProducts = sampleProducts
@@ -97,7 +123,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-              {product.images.map((image, index) => (
+              {product.images.map((image: string, index: number) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -148,7 +174,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   <SelectValue placeholder="Select a size" />
                 </SelectTrigger>
                 <SelectContent>
-                  {product.sizes.map((size) => (
+                  {product.sizes.map((size: string) => (
                     <SelectItem key={size} value={size}>
                       {size}
                     </SelectItem>
@@ -246,6 +272,10 @@ export default function ProductPage({ params }: ProductPageProps) {
             </div>
           </section>
         )}
+
+        <div className="text-center text-sm text-orange-600 p-4 bg-orange-50 rounded-lg mt-8">
+          🔥 TODO: Connect Firebase here - Product details update in real-time when admin makes changes
+        </div>
       </main>
 
       <Footer />
